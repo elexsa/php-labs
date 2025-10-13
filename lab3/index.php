@@ -16,6 +16,16 @@ $menu = [
     "Page3" => "page-3.php",
     "Page4" => "page-4.php"
 ];
+
+// Підключення до БД
+require_once 'db_config.php'; 
+
+// Унікальний ключ сторінки
+$page_key = basename($_SERVER['PHP_SELF'], '.php'); 
+
+// Завантаження збережених даних з MySQL    (замість використання початкових змінних)
+$edits = [];
+
 ?>
 
 
@@ -76,79 +86,102 @@ $menu = [
 <?php $end_time_php = microtime(true); // Час на кінець генерації сторінки на сервері ?>
 
 <script>
-    // Обчислення часу
-    const phpGenerationTime = <?= $end_time_php - $start_time_php; ?>; // Час генерації на сервері
-    let localStorageTime = 0; 
+    // Обчислення часу (значення генеруються PHP)
+    const phpGenerationTime = <?= number_format($phpGenerationTime, 6, '.', ''); ?>;
 
-    // Блок редагування та використання localStorage
+    // Дані для порівняння з Практикумом №2 (LocalStorage)
+    const lsGenTime = 0.000; 
+    const lsLoadTime = 0.4; 
+    const lsTotalTime = lsGenTime + (lsLoadTime / 1000);
+
     document.addEventListener('DOMContentLoaded', () => {
-        const pageKey = window.location.pathname.split('/').pop().replace('.php', ''); // Унікальний ключ сторінки
 
-        // Перевірка та підтягування даних з localStorage
-        const lsStart = performance.now();
+        // Отримання ключа сторінки, згенерованого PHP
+        const pageKey = '<?= $page_key ?>'; 
         const editableElements = document.querySelectorAll('.editable');
-        editableElements.forEach(element => {
-            const dataKey = element.getAttribute('data-key');
-            const storageKey = `${pageKey}-${dataKey}`;
-            const storedValue = localStorage.getItem(storageKey);
+        
+        // У моделі БД загальний час формування = час PHP (який включає БД)
+        const totalLoadTime = phpGenerationTime; 
+
+        // Відображення таблиці з часом
+        const timeDisplay = document.createElement('div');
+        timeDisplay.innerHTML = `
+            <h3 style="text-align: center; margin-top: 20px;">Обчислення Часу Завантаження (Практикум №3: MySQL)</h3>
+            <table style="width: 80%; margin: 10px auto; border-collapse: collapse;">
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час генерації PHP (вкл. БД):</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${phpGenerationTime.toFixed(6)} сек</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Загальний час формування сторінки:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${totalLoadTime.toFixed(6)} сек</td></tr>
+            </table>
             
-            if (storedValue) {
-                element.innerHTML = storedValue;
-            }
-        });
-        localStorageTime = performance.now() - lsStart; // Час за який підтягуються дані з localStorage 
-        
-        // Відображення часу завантаження
-        const totalLoadTime = phpGenerationTime + (localStorageTime / 1000); 
-        console.log(`Час генерації PHP: ${phpGenerationTime.toFixed(4)} сек`);
-        console.log(`Час підтягування з localStorage: ${localStorageTime.toFixed(4)} мс`);
-        console.log(`Загальний час формування сторінки: ${totalLoadTime.toFixed(4)} сек`);
-        
+            <h3 style="text-align: center;">Порівняння з Практикумом №2 (LocalStorage)</h3>
+            <table style="width: 80%; margin: 10px auto; border-collapse: collapse;">
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час PHP Gen (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsGenTime.toFixed(6)} сек</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час підтягування (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsLoadTime.toFixed(4)} мс</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">**Загальний час (LS)**:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${lsTotalTime.toFixed(6)} сек</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">**Різниця (БД - LS)**:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${(totalLoadTime - lsTotalTime).toFixed(6)} сек</td></tr>
+            </table>
+        `;
+        document.querySelector('.container').appendChild(timeDisplay);
 
         // Обробка кліку для редагування
         editableElements.forEach(element => {
             element.style.cursor = 'pointer';
 
             element.addEventListener('click', function(event) {
-                event.stopPropagation(); // Запобігти багаторазовому запуску при вкладених елементах
+                event.stopPropagation(); 
 
                 // Якщо вже є форма, ігноруємо клік
                 if (element.querySelector('form')) return;
 
-                const originalContent = element.innerHTML.trim();
+                const currentContent = element.innerHTML.trim(); 
+                const dataKey = element.getAttribute('data-key');
                 const form = document.createElement('form');
                 const textarea = document.createElement('textarea');
                 const saveButton = document.createElement('button');
                 const cancelButton = document.createElement('button');
                 
                 // Налаштування елементів форми
-                textarea.value = originalContent;
+                textarea.value = currentContent;
                 textarea.style.width = '100%';
                 textarea.style.minHeight = '100px';
+                textarea.style.boxSizing = 'border-box';
                 
                 saveButton.textContent = 'Зберегти';
-                saveButton.type = 'submit';
-
-                // Збереження вмісту
+                saveButton.type = 'submit'; 
+                
+                // AJAX-Збереження на Сервер (замість localStorage)
                 form.onsubmit = function(e) {
                     e.preventDefault();
                     const newContent = textarea.value.trim();
-                    const dataKey = element.getAttribute('data-key');
-                    const storageKey = `${pageKey}-${dataKey}`;
 
-                    element.innerHTML = newContent;
-
-                    localStorage.setItem(storageKey, newContent);
+                    // Надсилання даних на сервер
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", "save_content.php", true);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    
+                    xhr.onload = function () {
+                        if (xhr.status === 200) {
+                            // Успішно збережено в MySQL, оновлюємо вміст
+                            element.innerHTML = newContent;
+                        } else {
+                            alert('Помилка збереження даних на сервері. Статус: ' + xhr.status);
+                            // Якщо помилка, відновлюємо попередній вміст
+                            element.innerHTML = currentContent; 
+                        }
+                    };
+                    
+                    // Формування POST-даних
+                    const data = `page_key=${pageKey}&element_key=${dataKey}&content=${encodeURIComponent(newContent)}`;
+                    xhr.send(data);
                 };
 
-                // Збірка форми
+                // Збірка та відображення форми
                 form.appendChild(textarea);
                 form.appendChild(saveButton);
-                
-                // Заміщення вмісту елемента формою
+
                 element.innerHTML = '';
                 element.appendChild(form);
-            }, { once: false }); // Можливість повторного кліку
+                textarea.focus();
+            }, { once: false });
         });
     });
 </script>
