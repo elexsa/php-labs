@@ -18,6 +18,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['page_key'], $_POST['el
     $stmt = $conn->prepare($sql_insert);
     $stmt->bind_param("sss", $page_key, $element_key, $content);
     
+    if ($stmt->execute()) {
+        http_response_code(200); // Успішно
+        echo "Дані збережено.";
+    } else {
+        http_response_code(500); 
+        echo "Помилка при збереженні: " . $conn->error;
+    }
+
     $stmt->close();
     $conn->close();
     exit;
