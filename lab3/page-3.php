@@ -16,6 +16,16 @@ $menu = [
     "Page3" => "page-3.php",
     "Page4" => "page-4.php"
 ];
+
+// Підключення до БД
+require_once 'db_config.php'; 
+
+// Унікальний ключ сторінки
+$page_key = basename($_SERVER['PHP_SELF'], '.php'); 
+
+// Завантаження збережених даних з MySQL    (замість використання початкових змінних)
+$edits = [];
+
 ?>
 
 <!DOCTYPE html>
