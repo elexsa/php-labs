@@ -83,7 +83,12 @@ $edits = [];
 
 </div>
 
-<?php $end_time_php = microtime(true); // Час на кінець генерації сторінки на сервері ?>
+<?php 
+
+$end_time_php = microtime(true); // Час на кінець генерації сторінки на сервері 
+$phpGenerationTime = $end_time_php - $start_time_php;
+
+?>
 
 <script>
     // Обчислення часу (значення генеруються PHP)
@@ -116,8 +121,8 @@ $edits = [];
             <table style="width: 80%; margin: 10px auto; border-collapse: collapse;">
                 <tr><td style="border: 1px solid #ccc; padding: 5px;">Час PHP Gen (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsGenTime.toFixed(6)} сек</td></tr>
                 <tr><td style="border: 1px solid #ccc; padding: 5px;">Час підтягування (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsLoadTime.toFixed(4)} мс</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">**Загальний час (LS)**:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${lsTotalTime.toFixed(6)} сек</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">**Різниця (БД - LS)**:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${(totalLoadTime - lsTotalTime).toFixed(6)} сек</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Загальний час (LS):</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${lsTotalTime.toFixed(6)} сек</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 5px;">Різниця (БД - LS):</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${(totalLoadTime - lsTotalTime).toFixed(6)} сек</td></tr>
             </table>
         `;
         document.querySelector('.container').appendChild(timeDisplay);
