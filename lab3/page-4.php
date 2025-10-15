@@ -23,8 +23,33 @@ require_once 'db_config.php';
 // Унікальний ключ сторінки
 $page_key = basename($_SERVER['PHP_SELF'], '.php'); 
 
-// Завантаження збережених даних з MySQL    (замість використання початкових змінних)
+// Завантаження всіх збережених змін для поточної сторінки
 $edits = [];
+$db_start_time = microtime(true);
+$sql_select = "SELECT element_key, content FROM content_edits WHERE page_key = ?";
+
+// Використання підготовлених запитів для безпеки
+if ($stmt = $conn->prepare($sql_select)) {
+    $stmt->bind_param("s", $page_key);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        // Зберігаємо дані у вигляді: ['block-b1-inner' => 'Новий вміст']
+        $edits[$row['element_key']] = $row['content'];
+    }
+    $stmt->close();
+} else {
+    echo "Помилка при підготовці запиту: " . $conn->error;
+}
+$db_end_time = microtime(true); 
+
+// Допоміжна функція для підтягування контенту з БД або використання початкового
+function get_content($key, $default_content, $edits) {
+    // Якщо ключ знайдено в масиві $edits (дані з БД), повертаємо його.
+    // Інакше повертаємо початковий вміст.
+    return $edits[$key] ?? $default_content;
+}
 
 ?>
 
@@ -32,17 +57,22 @@ $edits = [];
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title><?= $x; ?></title>
-    <link rel="stylesheet" href="style.css">
+    <title><?= $x ?></title> <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<?php $start_time_php = microtime(true); // Час на початку генерації сторінки на сервері ?>
+<?php 
+$start_time_php = microtime(true); 
+?>
 
 <div class="container">
 
     <div class="block b1 editable" data-key="block-b1">
-        <div class="inner editable" data-key="block-b1-inner"><?= $x; ?></div>
-        <?= "<p class='editable' data-key='block-b1-p'>$p1</p>"; ?>
+        <div class="inner editable" data-key="block-b1-inner">
+            <?= get_content('block-b1-inner', $x, $edits); ?>
+        </div>
+        <p class='editable' data-key='block-b1-p'>
+            <?= get_content('block-b1-p', $p1, $edits); ?>
+        </p>
     </div>
 
     <div class="middle">
@@ -57,35 +87,44 @@ $edits = [];
                 
             <div class="b3 btext">
                 <ul class="editable" data-key="block-b3-ul">
-                    <li>One</li>
-                    <li>Two</li>
-                    <li>Three</li>
+                    <?= get_content('block-b3-ul', "<li>One</li><li>Two</li><li>Three</li>", $edits); ?>
                 </ul>
             </div>
         </div>
 
         <div class="side-block-col">
-            <div class="b4 btext editable" data-key="block-b4-p"><?= "<p>$p2</p>"; ?></div>
+            <div class="b4 btext editable" data-key="block-b4-p">
+                <?= get_content('block-b4-p', "<p>$p2</p>", $edits); ?>
+            </div>
             <div class="inner-bottom">
-                <div class="b5 btext editable" data-key="block-b5-p"><?= "<p>$p3</p>"; ?></div>
+                <div class="b5 btext editable" data-key="block-b5-p">
+                    <?= get_content('block-b5-p', "<p>$p3</p>", $edits); ?>
+                </div>
                 <div class="b6 btext">
                     <img src="images/img1.jpg" alt="Image 1" width="200">
-                    <div class="editable" data-key="block-b6-text">Image description</div> </div>
+                    <div class="editable" data-key="block-b6-text">
+                        <?= get_content('block-b6-text', "Image description", $edits); ?>
+                    </div> 
+                </div>
             </div>
         </div>
     </div>
 
     <div class="block b7 editable" data-key="block-b7">
-        <?= "<p class='editable' data-key='block-b7-p'>$p2</p>"; ?>
-        <div class="inner editable" data-key="block-b7-inner"><?= $y; ?></div>
+        <p class='editable' data-key='block-b7-p'>
+            <?= get_content('block-b7-p', $p2, $edits); ?>
+        </p>
+        <div class="inner editable" data-key="block-b7-inner">
+            <?= get_content('block-b7-inner', $y, $edits); ?>
+        </div>
     </div>
 
 </div>
-
 <?php 
 
-$end_time_php = microtime(true); // Час на кінець генерації сторінки на сервері 
+$end_time_php = microtime(true); 
 $phpGenerationTime = $end_time_php - $start_time_php;
+$dbQueryTime = $db_end_time - $db_start_time;
 
 ?>
 
