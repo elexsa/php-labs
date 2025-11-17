@@ -1,6 +1,6 @@
 <?php
 // Текстові дані
-$x = "Main Page";
+$x = "Dropdown Menu Creator";
 $y = "Variable Y";
 
 // Абзаци тексту
@@ -85,10 +85,14 @@ $start_time_php = microtime(true);
                 </ul>
             </div>
                 
+
             <div class="b3 btext">
-                <ul class="editable" data-key="block-b3-ul">
-                    <?= get_content('block-b3-ul', "<li>One</li><li>Two</li><li>Three</li>", $edits); ?>
-                </ul>
+                <h2>Налаштування Dropdown Меню</h2>
+                <div id="menu-creator-container">
+                    </div>
+                <button id="add-main-item">➕ Додати Головний Пункт</button>
+                <button id="save-menu-btn" style="background: #a9d18e; border: none; padding: 10px; margin-top: 20px;">💾 Зберегти на Сервер</button>
+                <div id="save-status" style="margin-top: 10px; color: green;"></div>
             </div>
         </div>
 
