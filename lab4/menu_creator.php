@@ -131,7 +131,115 @@ $phpGenerationTime = $end_time_php - $start_time_php;
 $dbQueryTime = $db_end_time - $db_start_time;
 
 ?>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('menu-creator-container');
+        const addMainBtn = document.getElementById('add-main-item');
+        const saveBtn = document.getElementById('save-menu-btn');
+        const statusDiv = document.getElementById('save-status');
+        let itemIdCounter = 0;
 
+        // Функція, що створює поля для головного пункту меню
+        function createMainItem() {
+            itemIdCounter++;
+            const mainId = `main-${itemIdCounter}`;
+            const div = document.createElement('div');
+            div.className = 'main-item-group';
+            div.id = mainId;
+            div.style.border = '1px solid #ccc';
+            div.style.padding = '10px';
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <h4>Головний Пункт (ID: ${itemIdCounter}) <button class="remove-main-item" data-id="${mainId}">X</button></h4>
+                <label>Текст: <input type="text" name="main-text" value="Пункт ${itemIdCounter}"></label><br>
+                <label>Посилання: <input type="url" name="main-url" value="#url${itemIdCounter}"></label><br>
+                <div class="sub-items-container"></div>
+                <button type="button" class="add-sub-item" data-main-id="${mainId}">+ Додати Підпункт</button>
+            `;
+            container.appendChild(div);
+        }
+
+        // Функція, що створює поля для підпункту
+        function createSubItem(mainContainer, subIndex) {
+            const subDiv = document.createElement('div');
+            subDiv.className = 'sub-item';
+            subDiv.style.marginLeft = '20px';
+            subDiv.innerHTML = `
+                <label>Підпункт ${subIndex} Текст: <input type="text" name="sub-text"></label>
+                <label>Посилання: <input type="url" name="sub-url"></label>
+                <button type="button" class="remove-sub-item">X</button>
+            `;
+            mainContainer.appendChild(subDiv);
+
+            // Обробник видалення підпункту
+            subDiv.querySelector('.remove-sub-item').addEventListener('click', function() {
+                subDiv.remove();
+            });
+        }
+
+        // --- Обробники ---
+
+        // 1. Додавання головного пункту
+        addMainBtn.addEventListener('click', createMainItem);
+        createMainItem(); // Додати один пункт за замовчуванням
+
+        // 2. Додавання/видалення підпунктів
+        container.addEventListener('click', (e) => {
+            if (e.target.classList.contains('add-sub-item')) {
+                const mainItemDiv = e.target.closest('.main-item-group');
+                const subContainer = mainItemDiv.querySelector('.sub-items-container');
+                const subIndex = subContainer.children.length + 1;
+                createSubItem(subContainer, subIndex);
+            } else if (e.target.classList.contains('remove-main-item')) {
+                 if (confirm('Видалити цей пункт меню та всі підпункти?')) {
+                     e.target.closest('.main-item-group').remove();
+                 }
+            }
+        });
+
+        // 3. Збереження на сервер (AJAX, Пункт 2.c)
+        saveBtn.addEventListener('click', () => {
+            const menuData = [];
+            document.querySelectorAll('.main-item-group').forEach(mainDiv => {
+                const mainText = mainDiv.querySelector('input[name="main-text"]').value;
+                const mainUrl = mainDiv.querySelector('input[name="main-url"]').value;
+                const subItems = [];
+
+                mainDiv.querySelectorAll('.sub-item').forEach(subDiv => {
+                    subItems.push({
+                        text: subDiv.querySelector('input[name="sub-text"]').value,
+                        url: subDiv.querySelector('input[name="sub-url"]').value,
+                    });
+                });
+
+                menuData.push({
+                    text: mainText,
+                    url: mainUrl,
+                    sub: subItems
+                });
+            });
+
+            // AJAX для асинхронного збереження
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "save_menu.php", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    statusDiv.textContent = '✅ Збережено на сервері: ' + xhr.responseText;
+                } else {
+                    statusDiv.textContent = '❌ Помилка збереження: ' + xhr.responseText;
+                }
+            };
+
+            xhr.onerror = function() {
+                statusDiv.textContent = '❌ Мережева помилка при збереженні.';
+            };
+
+            xhr.send(JSON.stringify(menuData));
+        });
+    });
+</script>
 <script>
     // Обчислення часу
     const phpGenerationTime = <?= number_format($phpGenerationTime, 6, '.', ''); ?>;
