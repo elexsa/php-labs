@@ -14,7 +14,9 @@ $menu = [
     "Page1" => "page-1.php",
     "Page2" => "page-2.php",
     "Page3" => "page-3.php",
-    "Page4" => "page-4.php"
+    "Page4" => "page-4.php",
+    "Creator" => "menu_creator.php",
+    "Viewer" => "dropdown_viewer.php"
 ];
 
 // Підключення до БД
