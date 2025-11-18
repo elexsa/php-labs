@@ -3,76 +3,51 @@
 $x = "Dropdown Menu Creator";
 $y = "Variable Y";
 
-// Абзаци тексту
-$p1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
-$p2 = "Donec felis eros, posuere et dui sit amet, pellentesque facilisis turpis.";
-$p3 = "Integer efficitur est in vestibulum porta.";
-
-// Меню
+// Абзаци тексту та Меню
+$p1 = "На цій сторінці створюється структура меню, яка буде відображена на сторінці Dropdown Viewer.";
+$p2 = "Введіть головні пункти меню, їх посилання, та додайте необхідну кількість підпунктів для кожного.";
+$p3 = "Після натискання 'Зберегти' дані надсилаються в БД.";
 $menu = [
     "Main" => "index.php",
-    "Page1" => "page-1.php",
-    "Page2" => "page-2.php",
+    "Creator" => "menu_creator.php", 
+    "Viewer" => "dropdown_viewer.php", 
     "Page3" => "page-3.php",
     "Page4" => "page-4.php"
 ];
 
-// Підключення до БД
 require_once 'db_config.php'; 
 
-// Унікальний ключ сторінки
-$page_key = basename($_SERVER['PHP_SELF'], '.php'); 
+$initial_menu_json = '[]'; 
 
-// Завантаження всіх збережених змін для поточної сторінки
-$edits = [];
-$db_start_time = microtime(true);
-$sql_select = "SELECT element_key, content FROM content_edits WHERE page_key = ?";
+// Завантаження даних з БД (записи з id=1)
+$sql = "SELECT menu_data FROM dropdown_menu WHERE id = 1";
+$result = $conn->query($sql);
 
-// Використання підготовлених запитів для безпеки
-if ($stmt = $conn->prepare($sql_select)) {
-    $stmt->bind_param("s", $page_key);
-    $stmt->execute();
-    $result = $stmt->get_result();
+if ($result && $result->num_rows > 0) {
+    $row = $result->fetch_assoc();
 
-    while ($row = $result->fetch_assoc()) {
-        // Зберігаємо дані у вигляді: ['block-b1-inner' => 'Новий вміст']
-        $edits[$row['element_key']] = $row['content'];
-    }
-    $stmt->close();
-} else {
-    echo "Помилка при підготовці запиту: " . $conn->error;
-}
-$db_end_time = microtime(true); 
-
-// Допоміжна функція для підтягування контенту з БД або використання початкового
-function get_content($key, $default_content, $edits) {
-    // Якщо ключ знайдено в масиві $edits (дані з БД), повертаємо його.
-    // Інакше повертаємо початковий вміст.
-    return $edits[$key] ?? $default_content;
+    // Використовуємо addslashes для екранування лапок, які можуть порушити JS-рядок
+    $initial_menu_json = addslashes($row['menu_data']); 
 }
 
+$conn->close();
 ?>
 
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title><?= $x ?></title> <link rel="stylesheet" href="style.css">
+    <title><?= $x; ?></title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<?php 
-$start_time_php = microtime(true); 
-?>
+<?php $start_time_php = microtime(true); ?>
 
 <div class="container">
 
-    <div class="block b1 editable" data-key="block-b1">
-        <div class="inner editable" data-key="block-b1-inner">
-            <?= get_content('block-b1-inner', $x, $edits); ?>
-        </div>
-        <p class='editable' data-key='block-b1-p'>
-            <?= get_content('block-b1-p', $p1, $edits); ?>
-        </p>
+    <div class="block b1">
+        <div class="inner"><?= $x; ?></div>
+        <?= "<p>$p1</p>"; ?>
     </div>
 
     <div class="middle">
@@ -85,52 +60,33 @@ $start_time_php = microtime(true);
                 </ul>
             </div>
                 
-
-            <div class="b3 btext">
-                <h2>Налаштування Dropdown Меню</h2>
+            <div class="b3 btext" style="width: 100%;">
+                <p><b>Dropdown Settings</b></p>
                 <div id="menu-creator-container">
                     </div>
-                <button id="add-main-item">➕ Додати Головний Пункт</button>
-                <button id="save-menu-btn" style="background: #a9d18e; border: none; padding: 10px; margin-top: 20px;">💾 Зберегти на Сервер</button>
-                <div id="save-status" style="margin-top: 10px; color: green;"></div>
+                <button id="add-main-item" style="margin-top: 15px;">+ Add Item</button>
+                <button id="save-menu-btn" style="background: #a9d18e; border: none; padding: 10px; margin-top: 20px;">Save to server</button>
+                <div id="save-status" style="margin-top: 10px; min-height: 20px;"></div>
             </div>
         </div>
-
         <div class="side-block-col">
-            <div class="b4 btext editable" data-key="block-b4-p">
-                <?= get_content('block-b4-p', "<p>$p2</p>", $edits); ?>
-            </div>
+            <div class="b4 btext"><?= "<p>$p2</p>"; ?></div>
             <div class="inner-bottom">
-                <div class="b5 btext editable" data-key="block-b5-p">
-                    <?= get_content('block-b5-p', "<p>$p3</p>", $edits); ?>
-                </div>
-                <div class="b6 btext">
-                    <img src="images/img1.jpg" alt="Image 1" width="200">
-                    <div class="editable" data-key="block-b6-text">
-                        <?= get_content('block-b6-text', "Image description", $edits); ?>
-                    </div> 
-                </div>
+                <div class="b5 btext"><?= "<p>$p3</p>"; ?></div>
+                <div class="b6 btext"><img src="images/img1.jpg" alt="Image 1" width="200"></div>
             </div>
         </div>
     </div>
 
-    <div class="block b7 editable" data-key="block-b7">
-        <p class='editable' data-key='block-b7-p'>
-            <?= get_content('block-b7-p', $p2, $edits); ?>
-        </p>
-        <div class="inner editable" data-key="block-b7-inner">
-            <?= get_content('block-b7-inner', $y, $edits); ?>
-        </div>
+    <div class="block b7">
+        <?= "<p>$p2</p>"; ?>
+        <div class="inner"><?= $y; ?></div>
     </div>
 
 </div>
-<?php 
 
-$end_time_php = microtime(true); 
-$phpGenerationTime = $end_time_php - $start_time_php;
-$dbQueryTime = $db_end_time - $db_start_time;
+<?php $end_time_php = microtime(true); ?>
 
-?>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('menu-creator-container');
@@ -139,67 +95,129 @@ $dbQueryTime = $db_end_time - $db_start_time;
         const statusDiv = document.getElementById('save-status');
         let itemIdCounter = 0;
 
-        // Функція, що створює поля для головного пункту меню
-        function createMainItem() {
+        // 💡Функція створення головного пункту
+        function createMainItem(initialText = null, initialUrl = null) {
             itemIdCounter++;
             const mainId = `main-${itemIdCounter}`;
             const div = document.createElement('div');
             div.className = 'main-item-group';
             div.id = mainId;
-            div.style.border = '1px solid #ccc';
+            div.style.border = '1px solid #b3cde0';
             div.style.padding = '10px';
             div.style.marginBottom = '10px';
+            
+            // Використовуємо початкові значення, або значення за замовчуванням
+            const textValue = initialText !== null ? initialText : `Пункт ${itemIdCounter}`;
+            const urlValue = initialUrl !== null ? initialUrl : `#url${itemIdCounter}`;
+            
             div.innerHTML = `
-                <h4>Головний Пункт (ID: ${itemIdCounter}) <button class="remove-main-item" data-id="${mainId}">X</button></h4>
-                <label>Текст: <input type="text" name="main-text" value="Пункт ${itemIdCounter}"></label><br>
-                <label>Посилання: <input type="url" name="main-url" value="#url${itemIdCounter}"></label><br>
-                <div class="sub-items-container"></div>
+                <h4 style="margin: 5px 0;">Пункт ID: ${itemIdCounter} <button class="remove-main-item" data-id="${mainId}" style="float: right;">X</button></h4>
+                <label>Текст: <input type="text" name="main-text" value="${textValue}"></label>
+                <label>Посилання: <input type="url" name="main-url" value="${urlValue}"></label><br>
+                <div class="sub-items-container" style="margin-top: 10px;"></div>
                 <button type="button" class="add-sub-item" data-main-id="${mainId}">+ Додати Підпункт</button>
             `;
-            container.appendChild(div);
+            
+            // Повертаємо div, щоб функція-виклик вирішила, чи додавати його
+            return div;
         }
 
-        // Функція, що створює поля для підпункту
-        function createSubItem(mainContainer, subIndex) {
+        // 💡 Функція створення підпункту
+        function createSubItem(mainContainer, subIndex, initialText = '', initialUrl = '') {
             const subDiv = document.createElement('div');
+            const subId = mainContainer.closest('.main-item-group').id + `-sub-${subIndex}`;
             subDiv.className = 'sub-item';
+            subDiv.id = subId;
             subDiv.style.marginLeft = '20px';
+            subDiv.style.padding = '5px';
+            subDiv.style.borderLeft = '2px solid #ccc';
+            
+            // Використовуємо початкові значення, або порожні рядки
+            const textValue = initialText; 
+            const urlValue = initialUrl;
+            
             subDiv.innerHTML = `
-                <label>Підпункт ${subIndex} Текст: <input type="text" name="sub-text"></label>
-                <label>Посилання: <input type="url" name="sub-url"></label>
-                <button type="button" class="remove-sub-item">X</button>
+                <label>Підпункт ${subIndex} Текст: <input type="text" name="sub-text" value="${textValue}"></label>
+                <label>Посилання: <input type="url" name="sub-url" value="${urlValue}"></label>
+                <button type="button" class="remove-sub-item" style="margin-left: 10px;">X</button>
             `;
             mainContainer.appendChild(subDiv);
 
-            // Обробник видалення підпункту
             subDiv.querySelector('.remove-sub-item').addEventListener('click', function() {
                 subDiv.remove();
             });
         }
+        
+        // 💡Функція для завантаження даних із БД у форму
+        function loadInitialMenu(menuData) {
+            // Якщо дані порожні, додаємо один пункт за замовчуванням
+            if (!menuData || menuData.length === 0) {
+                container.appendChild(createMainItem());
+                return;
+            }
 
-        // --- Обробники ---
+            // Відтворюємо кожен пункт меню у формі
+            menuData.forEach(item => {
+                // Створюємо головний пункт, передаючи збережені значення
+                const mainDiv = createMainItem(item.text, item.url);
+                
+                const subContainer = mainDiv.querySelector('.sub-items-container');
 
-        // 1. Додавання головного пункту
-        addMainBtn.addEventListener('click', createMainItem);
-        createMainItem(); // Додати один пункт за замовчуванням
+                // Відтворюємо підпункти
+                if (item.sub && item.sub.length > 0) {
+                    item.sub.forEach((subItem, index) => {
+                        // Створюємо підпункт
+                        createSubItem(subContainer, index + 1, subItem.text, subItem.url);
+                    });
+                }
+                
+                // Додаємо повністю зібраний головний пункт до контейнера
+                container.appendChild(mainDiv);
+            });
+        }
 
-        // 2. Додавання/видалення підпунктів
+
+        // ----------------------------------------------------------------------------------
+        // Обробники
+        // ----------------------------------------------------------------------------------
+
+        // 💡 Завантаження початкових даних з PHP
+        const initialMenuDataJson = '<?= $initial_menu_json; ?>';
+        let initialMenuData = [];
+        try {
+            // Парс JSON, якщо він не порожній
+            if (initialMenuDataJson && initialMenuDataJson !== '[]') {
+                initialMenuData = JSON.parse(initialMenuDataJson);
+            }
+        } catch (e) {
+            console.error("Помилка парсингу початкових даних меню:", e);
+        }
+
+        // Завантажуємо дані або створюємо початковий елемент
+        loadInitialMenu(initialMenuData); 
+
+        // Обробник для кнопки "Add Item"
+        addMainBtn.addEventListener('click', () => {
+            container.appendChild(createMainItem());
+        });
+
+        // Обробник для кнопок "Add Sub Item" та "Remove Main Item"
         container.addEventListener('click', (e) => {
             if (e.target.classList.contains('add-sub-item')) {
-                const mainItemDiv = e.target.closest('.main-item-group');
-                const subContainer = mainItemDiv.querySelector('.sub-items-container');
+                const subContainer = e.target.closest('.main-item-group').querySelector('.sub-items-container');
                 const subIndex = subContainer.children.length + 1;
                 createSubItem(subContainer, subIndex);
             } else if (e.target.classList.contains('remove-main-item')) {
-                 if (confirm('Видалити цей пункт меню та всі підпункти?')) {
-                     e.target.closest('.main-item-group').remove();
-                 }
+                if (confirm('Видалити цей пункт меню?')) {
+                    e.target.closest('.main-item-group').remove();
+                }
             }
         });
 
-        // 3. Збереження на сервер (AJAX, Пункт 2.c)
+        // Збереження на сервер 
         saveBtn.addEventListener('click', () => {
             const menuData = [];
+            
             document.querySelectorAll('.main-item-group').forEach(mainDiv => {
                 const mainText = mainDiv.querySelector('input[name="main-text"]').value;
                 const mainUrl = mainDiv.querySelector('input[name="main-url"]').value;
@@ -219,126 +237,23 @@ $dbQueryTime = $db_end_time - $db_start_time;
                 });
             });
 
-            // AJAX для асинхронного збереження
+            statusDiv.innerHTML = '... Збереження ...';
+            
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "save_menu.php", true);
             xhr.setRequestHeader("Content-Type", "application/json");
 
             xhr.onload = function () {
                 if (xhr.status === 200) {
-                    statusDiv.textContent = '✅ Збережено на сервері: ' + xhr.responseText;
+                    statusDiv.innerHTML = 'Успішно збережено!';
                 } else {
-                    statusDiv.textContent = '❌ Помилка збереження: ' + xhr.responseText;
+                    statusDiv.innerHTML = `Помилка збереження: ${xhr.status} ${xhr.responseText}`;
                 }
             };
-
             xhr.onerror = function() {
-                statusDiv.textContent = '❌ Мережева помилка при збереженні.';
+                statusDiv.innerHTML = 'Мережева помилка.';
             };
-
             xhr.send(JSON.stringify(menuData));
-        });
-    });
-</script>
-<script>
-    // Обчислення часу
-    const phpGenerationTime = <?= number_format($phpGenerationTime, 6, '.', ''); ?>;
-    const dbQueryTime = <?= number_format($dbQueryTime, 6, '.', ''); ?>;
-
-    // Дані для порівняння з Практикумом №2 (LocalStorage)
-    const lsGenTime = 0.004; 
-    const lsLoadTime = 0.4; 
-    const lsTotalTime = lsGenTime + (lsLoadTime / 1000);
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        // Отримання ключа сторінки, згенерованого PHP
-        const pageKey = '<?= $page_key ?>'; 
-        const editableElements = document.querySelectorAll('.editable');
-        
-        // У моделі БД загальний час формування = час PHP (який включає БД)
-        const totalLoadTime = phpGenerationTime+dbQueryTime; 
-
-        // Відображення таблиці з часом
-        const timeDisplay = document.createElement('div');
-        timeDisplay.innerHTML = `
-
-            <h3 style="text-align: center; margin-top: 20px;">Обчислення Часу Завантаження Практикум 3</h3>
-            <table style="width: 80%; margin: 10px auto; border-collapse: collapse;">
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час генерації PHP:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${phpGenerationTime.toFixed(6)} сек</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Загальний час формування сторінки:</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${totalLoadTime.toFixed(6)} сек</td></tr>
-            </table>
-            
-            <h3 style="text-align: center;">Порівняння з практикумом 2</h3>
-            <table style="width: 80%; margin: 10px auto; border-collapse: collapse;">
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час PHP Gen (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsGenTime.toFixed(6)} сек</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Час підтягування (LS):</td><td style="border: 1px solid #ccc; padding: 5px;">${lsLoadTime.toFixed(4)} мс</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Загальний час (LS):</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${lsTotalTime.toFixed(6)} сек</td></tr>
-                <tr><td style="border: 1px solid #ccc; padding: 5px;">Різниця (БД - LS):</td><td style="border: 1px solid #ccc; padding: 5px; font-weight: bold;">${(totalLoadTime - lsTotalTime).toFixed(6)} сек</td></tr>
-            </table>
-        `;
-        document.querySelector('.container').appendChild(timeDisplay);
-
-        // Обробка кліку для редагування
-        editableElements.forEach(element => {
-            element.style.cursor = 'pointer';
-
-            element.addEventListener('click', function(event) {
-                event.stopPropagation(); 
-
-                // Якщо вже є форма, ігноруємо клік
-                if (element.querySelector('form')) return;
-
-                const currentContent = element.innerHTML.trim(); 
-                const dataKey = element.getAttribute('data-key');
-                const form = document.createElement('form');
-                const textarea = document.createElement('textarea');
-                const saveButton = document.createElement('button');
-                const cancelButton = document.createElement('button');
-                
-                // Налаштування елементів форми
-                textarea.value = currentContent;
-                textarea.style.width = '100%';
-                textarea.style.minHeight = '100px';
-                textarea.style.boxSizing = 'border-box';
-                
-                saveButton.textContent = 'Зберегти';
-                saveButton.type = 'submit'; 
-                
-                // AJAX-Збереження на Сервер (замість localStorage)
-                form.onsubmit = function(e) {
-                    e.preventDefault();
-                    const newContent = textarea.value.trim();
-
-                    // Надсилання даних на сервер
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("POST", "save_content.php", true);
-                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                    
-                    xhr.onload = function () {
-                        if (xhr.status === 200) {
-                            // Успішно збережено в MySQL, оновлюємо вміст
-                            element.innerHTML = newContent;
-                        } else {
-                            alert('Помилка збереження даних на сервері. Статус: ' + xhr.status);
-                            // Якщо помилка, відновлюємо попередній вміст
-                            element.innerHTML = currentContent; 
-                        }
-                    };
-                    
-                    // Формування POST-даних
-                    const data = `page_key=${pageKey}&element_key=${dataKey}&content=${encodeURIComponent(newContent)}`;
-                    xhr.send(data);
-                };
-
-                // Збірка та відображення форми
-                form.appendChild(textarea);
-                form.appendChild(saveButton);
-
-                element.innerHTML = '';
-                element.appendChild(form);
-                textarea.focus();
-            }, { once: false });
         });
     });
 </script>
