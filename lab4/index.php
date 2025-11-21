@@ -11,12 +11,13 @@ $p3 = "Integer efficitur est in vestibulum porta.";
 // Меню
 $menu = [
     "Main" => "index.php",
+    "Creator" => "menu_creator.php",
+    "Viewer" => "dropdown_viewer.php",
     "Page1" => "page-1.php",
     "Page2" => "page-2.php",
     "Page3" => "page-3.php",
-    "Page4" => "page-4.php",
-    "Creator" => "menu_creator.php",
-    "Viewer" => "dropdown_viewer.php"
+    "Page4" => "page-4.php"
+
 ];
 
 // Підключення до БД

@@ -4,13 +4,15 @@ $x = "Dropdown Menu Creator";
 $y = "Variable Y";
 
 // Абзаци тексту та Меню
-$p1 = "На цій сторінці створюється структура меню, яка буде відображена на сторінці Dropdown Viewer.";
-$p2 = "Введіть головні пункти меню, їх посилання, та додайте необхідну кількість підпунктів для кожного.";
-$p3 = "Після натискання 'Зберегти' дані надсилаються в БД.";
+$p1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+$p2 = "Donec felis eros, posuere et dui sit amet, pellentesque facilisis turpis.";
+$p3 = "Integer efficitur est in vestibulum porta.";
 $menu = [
     "Main" => "index.php",
     "Creator" => "menu_creator.php", 
     "Viewer" => "dropdown_viewer.php", 
+    "Page1" => "page-1.php",
+    "Page2" => "page-2.php",
     "Page3" => "page-3.php",
     "Page4" => "page-4.php"
 ];

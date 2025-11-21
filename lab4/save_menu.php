@@ -1,6 +1,7 @@
 <?php
 require_once 'db_config.php'; // Підключення до БД
 
+// Забезпечуємо, що відповідь буде у форматі JSON
 header('Content-Type: application/json');
 
 // Отримання сирих JSON-даних
@@ -13,11 +14,10 @@ if (empty($menu_data) || !is_array($menu_data)) {
     exit;
 }
 
-// 1. Кодуємо масив назад у JSON для зберігання в полі menu_data (тип JSON)
+// Кодуємо масив назад у JSON для зберігання в полі menu_data
 $menu_json = json_encode($menu_data);
 
-// 2. Виконуємо UPSERT (запис/оновлення)
-// Припускаємо, що ми завжди оновлюємо запис з id=1 (єдиний запис меню)
+// UPSERT: Оновлюємо запис з id=1. Якщо його немає, вставляємо.
 $sql = "INSERT INTO dropdown_menu (id, menu_data) VALUES (1, ?)
         ON DUPLICATE KEY UPDATE menu_data = VALUES(menu_data)";
 

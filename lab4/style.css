@@ -100,3 +100,69 @@ body{
     color:#000;
     padding: 10px;
 }
+
+
+/* 1. Адаптація контейнера B3 для горизонтального меню */
+.b1 .custom-dropdown { 
+    width: 100%; 
+    /* Вирівнювання меню по лівому краю */
+}
+
+/* 2. ГОЛОВНЕ МЕНЮ (ГОРИЗОНТАЛЬНИЙ ВИГЛЯД) */
+.custom-dropdown .main-menu { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    display: flex; /* КЛЮЧ: Робить пункти горизонтальними */
+    background: #b6d7a8;
+    list-style-type: none;
+}
+
+/* 3. ОСНОВНИЙ ПУНКТ (БАЗА ДЛЯ ВИПАДАННЯ) */
+.custom-dropdown .main-menu > li { 
+    position: relative; /* КЛЮЧ: Дозволяє позиціонувати підменю абсолютно */
+    padding: 8px 15px; 
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background 0.3s;
+    margin-right: 1px;
+    text-decoration: none;
+
+}
+
+/* 4. Сховати та позиціонувати підменю */
+.custom-dropdown .submenu { 
+    display: none; /* ПРИХОВАНО ЗА ЗАМОВЧУВАННЯМ */
+    position: absolute; 
+    top: 100%; /* Випадає вниз */
+    left: 0; 
+    min-width: 100%; 
+    z-index: 1000; 
+    background: #f0f0f0; 
+    padding: 0; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    list-style-type: none;
+}
+
+/* 5. КЛЮЧОВА ПРАВИЛО: ПОКАЗАТИ ПІДМЕНЮ ПРИ НАВЕДЕННІ */
+.custom-dropdown .main-menu > li:hover .submenu { 
+
+    display: block; /* ЗРОБИТИ ВИДИМИМ */
+}
+
+.custom-dropdown .submenu li { 
+    padding: 8px 15px; 
+    margin: 0;
+    background: #f0f0f0; 
+    border-top: 1px solid #ccc;
+    white-space: nowrap; 
+}
+
+.custom-dropdown li:hover { 
+    background: #93c47d; 
+}
+.custom-dropdown li > a, .custom-dropdown li > span {
+    text-decoration: none;
+    color: #333;
+    display: block;
+}
